@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>七年級生物科 段考互動刷題系統</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --correct-color: #2ecc71;
+            --wrong-color: #e74c3c;
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Microsoft JhengHei", sans-serif;
+            background-color: var(--bg-color);
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 10px;
+        }
+
+        /* 考卷選擇畫面 */
+        .exam-select-screen {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .exam-btn {
+            padding: 18px 24px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: white;
+            background-color: var(--accent-color);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .exam-btn:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        /* 答題畫面 */
+        .quiz-screen {
+            display: none;
+        }
+
+        .top-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .back-btn {
+            background-color: #7f8c8d;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .back-btn:hover {
+            background-color: #95a5a6;
+        }
+
+        .progress-indicator {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .question-card {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e1e8ed;
+            border-radius: 8px;
+            background-color: #fff;
+        }
+
+        .source-tag {
+            display: inline-block;
+            background-color: #e8f4f8;
+            color: #2980b9;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            margin-bottom: 12px;
+        }
+
+        .group-title {
+            background-color: #f0f4f8;
+            padding: 10px 14px;
+            border-left: 4px solid var(--accent-color);
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+            color: #444;
+            line-height: 1.5;
+        }
+
+        .question-text {
+            font-size: 1.1rem;
+            font-weight: 600;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        .options-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .option-item {
+            margin-bottom: 10px;
+        }
+
+        .option-btn {
+            width: 100%;
+            text-align: left;
+            padding: 12px 16px;
+            font-size: 1rem;
+            background-color: #f8f9fa;
+            border: 1.5px solid #dee2e6;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            line-height: 1.4;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background-color: #e9ecef;
+            border-color: #adb5bd;
+        }
+
+        .option-btn:disabled {
+            cursor: default;
+        }
+
+        /* 答題狀態 */
+        .option-btn.selected-correct {
+            background-color: #d4edda !important;
+            border-color: var(--correct-color) !important;
+            color: #155724;
+            font-weight: bold;
+        }
+
+        .option-btn.selected-wrong {
+            background-color: #f8d7da !important;
+            border-color: var(--wrong-color) !important;
+            color: #721c24;
+        }
+
+        .option-btn.show-correct {
+            background-color: #d4edda !important;
+            border-color: var(--correct-color) !important;
+            color: #155724;
+            font-weight: bold;
+        }
+
+        /* 解析區塊 */
+        .explanation-box {
+            display: none;
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 6px;
+            background-color: #f1f3f5;
+            border-left: 5px solid var(--accent-color);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .explanation-box.visible {
+            display: block;
+        }
+
+        .result-header {
+            font-weight: bold;
+            font-size: 1.05rem;
+            margin-bottom: 8px;
+        }
+
+        .result-header.correct {
+            color: var(--correct-color);
+        }
+
+        .result-header.wrong {
+            color: var(--wrong-color);
+        }
+
+        .misconcept-note {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px dashed #ccc;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>七年級生物科 互動刷題系統</h1>
+
+    <!-- 考卷選擇畫面 -->
+    <div id="examSelectScreen" class="exam-select-screen">
+        <p style="text-align: center; color: #666; margin-bottom: 10px;">請選擇欲練習的考卷單元（已剔除含有圖片之題目）：</p>
+        <button class="exam-btn" onclick="startQuiz('114-2-1')">
+            <span>第一次段考 試題</span>
+            <span>純文字題庫</span>
+        </button>
+        <button class="exam-btn" onclick="startQuiz('114-2-2')">
+            <span>第二次段考 試題</span>
+            <span>純文字題庫</span>
+        </button>
+        <button class="exam-btn" onclick="startQuiz('114-2-3')">
+            <span>第三次段考 試題</span>
+            <span>純文字題庫</span>
+        </button>
+    </div>
+
+    <!-- 答題畫面 -->
+    <div id="quizScreen" class="quiz-screen">
+        <div class="top-nav">
+            <button class="back-btn" onclick="showSelectScreen()">← 返回選單</button>
+            <div id="progressIndicator" class="progress-indicator">進度：0 / 0</div>
+        </div>
+        <div id="questionsContainer"></div>
+    </div>
+</div>
+
+<script>
+// 全域題庫資料（已剔除所有圖表題，包含完整題目、選項、官方解答與易錯觀念解析）
+const examData = {
+    '114-2-1': [
+        {
+            source: '114-2-1 卷 第 3 題',
+            groupTitle: null,
+            text: '下表有關於細胞分裂和減數分裂的比較，何者錯誤？',
+            options: [
+                '(A) 複製次數：細胞分裂 1 次；減數分裂 2 次',
+                '(B) 分裂次數：細胞分裂 1 次；減數分裂 2 次',
+                '(C) 子細胞數目：細胞分裂 2 個；減數分裂 4 個',
+                '(D) 染色體套數：細胞分裂 2N；減數分裂 1N'
+            ],
+            answer: 0, // A
+            explanation: '【易錯觀念說明】細胞分裂與減數分裂在染色體複製的過程中，都「只複製 1 次」。減數分裂是「複製 1 次，連續分裂 2 次」，最終產生 4 個子細胞，染色體數目減半 (1N)。'
+        },
+        {
+            source: '114-2-1 卷 第 6 題',
+            groupTitle: null,
+            text: '馬鈴薯原產於南美洲安地斯山脈，十六世紀引入歐洲，十八世紀後馬鈴薯成了愛爾蘭的主食。1845~1852 愛爾蘭種植的馬鈴薯爆發晚疫病（馬鈴薯快速腐爛，無法食用），導致一百萬人因飢荒而死，超過一百萬人被迫移民。推測當時愛爾蘭種植馬鈴薯的方式，以及大饑荒產生的原因，下列敘述何者正確？',
+            options: [
+                '(A) 用塊根進行無性生殖，大量栽種',
+                '(B) 用種子進行有性生殖',
+                '(C) 精卵結合的有性生殖可以完整保存親代的優點',
+                '(D) 無性生殖不利於環境變異'
+            ],
+            answer: 3, // D
+            explanation: '【易錯觀念說明】馬鈴薯通常食用與繁殖的部位是「塊莖」（注意：非塊根）。無性生殖產生的後代基因幾乎完全相同，遺傳多樣性低，一旦遇到環境劇變或傳染病（如晚疫病），全群體易同時染病死亡。'
+        },
+        {
+            source: '114-2-1 卷 第 7 題',
+            groupTitle: null,
+            text: '在自然狀況下，有關動物的受精和胚胎發育，下列敘述何者正確？',
+            options: [
+                '(A) 卵生動物都是體外受精',
+                '(B) 體內受精都是胎生',
+                '(C) 青蛙是體內受精，體外孵化',
+                '(D) 海豚是胎生動物'
+            ],
+            answer: 3, // D
+            explanation: '【易錯觀念說明】(A) 鳥類與爬蟲類為卵生，但行體內受精；(B) 鳥類與爬蟲類體內受精但為卵生；(C) 青蛙為體外受精、體外孵化；(D) 海豚為哺乳類，行體內受精與胎生。'
+        },
+        {
+            source: '114-2-1 卷 第 9 題',
+            groupTitle: null,
+            text: '櫻桃和櫻花都是薔薇科的植物，親緣關係近但不相同，一般食用的櫻桃大部分來自歐洲櫻桃，花比櫻花小，果實比櫻花果大。關於櫻桃結果的描述何者正確？',
+            options: [
+                '(A) 雄蕊上的花粉掉落在雌蕊的柱頭',
+                '(B) 雌蕊會長出花粉管',
+                '(C) 櫻桃的受精需要水為媒介',
+                '(D) 櫻桃的子房內有多個胚珠'
+            ],
+            answer: 0, // A
+            explanation: '【易錯觀念說明】(A) 花粉傳至雌蕊柱頭稱為授粉；(B) 花粉萌發萌生花粉管，非雌蕊長出；(C) 開花植物受精依靠花粉管，不需要水為媒介；(D) 櫻桃內只有單一硬核種子，故子房內通常只有一個胚珠。'
+        },
+        {
+            source: '114-2-1 卷 第 12 題',
+            groupTitle: null,
+            text: '孟德爾選了七種性狀進行實驗，有關他實驗的敘述何者錯誤？',
+            options: [
+                '(A) 孟德爾進行實驗時，親代是自花授粉',
+                '(B) 孟德爾進行實驗時，親代均為純品系',
+                '(C) 若以A為代號，第一子代的基因型 Aa',
+                '(D) 第一子代的表現型都是顯性'
+            ],
+            answer: 0, // A
+            explanation: '【易錯觀念說明】孟德爾在進行不同性狀親代跨種交配時，會先去雄再進行人工「異花授粉」，以確保親代的遺傳雜交組合，而非讓親代自花授粉。'
+        },
+        {
+            source: '114-2-1 卷 第 13 題',
+            groupTitle: null,
+            text: '霏霏因為卵巢功能衰退，藉由試管嬰兒技術，生下一對雙胞胎姊弟，下列敘述何者正確？',
+            options: [
+                '(A) 試管嬰兒在體外受精',
+                '(B) 試管嬰兒是在體外發育成胎兒',
+                '(C) 這一對雙胞胎姊弟是同卵雙胞胎',
+                '(D) 這一對雙胞胎在發育的過程中，由卵提供養分'
+            ],
+            answer: 0, // A
+            explanation: '【易錯觀念說明】試管嬰兒是指「體外受精」，受精卵形成早期胚胎後仍須植入母體子宮內發育；性別不同的龍鳳胎必然為「異卵雙胞胎」；胎兒發育養分由母體透過胎盤與臍帶提供。'
+        },
+        {
+            source: '114-2-1 卷 第 14 題',
+            groupTitle: null,
+            text: '已知黃色的豌豆種子(Y)對綠色的豌豆種子(y)為顯性，今取一黃色豌豆與綠色豌豆互相交配，其子代有黃色豌豆與綠色豌豆兩種性狀。下列敘述何者正確？',
+            options: [
+                '(A) 親代的黃色豌豆基因型為YY',
+                '(B) 子代的綠色豌豆基因型為yy',
+                '(C) 子代的黃色豌豆基因型為YY',
+                '(D) 子代黃色豌豆與綠色豌豆出現的比例是3:1'
+            ],
+            answer: 1, // B
+            explanation: '【易錯觀念說明】因子代出現綠色 (yy)，說明親代黃色豌豆必帶有隱性基因，基因型應為 Yy。Yy × yy 交配後，子代黃色 (Yy) 與綠色 (yy) 比例應為 1:1。'
+        },
+        {
+            source: '114-2-1 卷 第 15 題',
+            groupTitle: null,
+            text: '承上題，若將第一子代的黃色豌豆自花授粉，關於第二子代的敘述何者正確？',
+            options: [
+                '(A) 第二子代均為黃色豌豆',
+                '(B) 第二子代均為綠色豌豆',
+                '(C) 第二子代黃色豌豆的基因型有YY和Yy兩種',
+                '(D) 第二子代黃色豌豆:綠色豌豆 = 1:1'
+            ],
+            answer: 2, // C
+            explanation: '【易錯觀念說明】第一子代的黃色豌豆基因型為 Yy。自花授粉 (Yy × Yy) 產生的第二子代基因型為 YY : Yy : yy = 1 : 2 : 1，表現型黃色 : 綠色 = 3 : 1。其中黃色包含 YY 與 Yy 兩種基因型。'
+        },
+        {
+            source: '114-2-1 卷 第 21 題',
+            groupTitle: '蜜蜂的繁衍主要依靠蜂后與雄蜂交配，蜂后可選擇產下受精卵（發育後成為工蜂或新蜂后），或產下未受精卵發育成雄蜂。試回答第21題~第22題：',
+            text: '雄蜂是由未受精的卵發育而來，故雄蜂的體細胞有幾套染色體？未受精的卵又是如何發育成雄蜂？',
+            options: [
+                '(A) 1N，減數分裂',
+                '(B) 1N，細胞分裂',
+                '(C) 2N，細胞分裂',
+                '(D) 2N，受精作用'
+            ],
+            answer: 1, // B
+            explanation: '【易錯觀念說明】未受精的卵細胞本身含單套染色體 (1N)，直接經過細胞分裂與細胞分化發育成完整的個體（雄蜂），故雄蜂體細胞亦為 1N。'
+        },
+        {
+            source: '114-2-1 卷 第 22 題',
+            groupTitle: '蜜蜂的繁衍主要依靠蜂后與雄蜂交配，蜂后可選擇產下受精卵（發育後成為工蜂或新蜂后），或產下未受精卵發育成雄蜂。試回答第21題~第22題：',
+            text: '雄蜂如何產生精子？精子內的染色體有幾套？',
+            options: [
+                '(A) 細胞分裂，1N',
+                '(B) 減數分裂，1N',
+                '(C) 減數分裂，2N',
+                '(D) 受精作用，2N'
+            ],
+            answer: 0, // A
+            explanation: '【易錯觀念說明】由於雄蜂體細胞本身已是單套 (1N)，若進行減數分裂染色體會不足，故雄蜂是透過「細胞分裂」直接產生 1N 的精子。'
+        },
+        {
+            source: '114-2-1 卷 第 34 題',
+            groupTitle: null,
+            text: '有一高莖豌豆，其遺傳因子組合為 Tt，下列敘述何者正確？',
+            options: [
+                '(A) 該豌豆會同時表現T遺傳因子和t遺傳因子所控制的特徵',
+                '(B) 該豌豆是純品系',
+                '(C) 該豌豆只會產生含有T的配子',
+                '(D) 該豌豆授粉後，子代可能表現 t 控制的特徵'
+            ],
+            answer: 3, // D
+            explanation: '【易錯觀念說明】Tt 中 T 為顯性、t 為隱性，表現型僅呈現顯性高莖。該個體可產生含 T 或 t 的兩種配子。當自花授粉或與帶有 t 的個體交配時，子代有機率出現 tt（矮莖）特徵。'
+        },
+        {
+            source: '114-2-1 卷 第 40 題',
+            groupTitle: null,
+            text: '有關等位基因的敘述，何者錯誤？',
+            options: [
+                '(A) 孟德爾認為細胞內具有可控制性狀的遺傳因子，即今日的等位基因',
+                '(B) 人類的等位基因是由DNA所構成',
+                '(C) 成對的等位基因會位在同一條染色體上',
+                '(D) 配子內的等位基因不成對'
+            ],
+            answer: 2, // C
+            explanation: '【易錯觀念說明】成對的等位基因是分別位於「同源染色體」相對應的位置上，而不是集中在同一條染色體上。'
+        }
+    ],
+    '114-2-2': [
+        {
+            source: '114-2-2 卷 第 2 題',
+            groupTitle: null,
+            text: '有關人類遺傳的敘述，下列何者錯誤？',
+            options: [
+                '(A) 精細胞可能不具有X染色體',
+                '(B) 肌肉細胞中有22對體染色體',
+                '(C) 男孩的X染色體可能來自父親，也可能來自母親',
+                '(D) 男孩的性染色體中，其Y染色體較X染色體短小。'
+            ],
+            answer: 2, // C
+            explanation: '【易錯觀念說明】男孩的性染色體為 XY，其中的 Y 染色體必定來自父親，而 X 染色體「只能來自母親」。'
+        },
+        {
+            source: '114-2-2 卷 第 3 題',
+            groupTitle: '【題組】小丸子家中的血型族譜：爺爺(?型)、奶奶(A型)、姑姑(B型)、爸爸(O型)、媽媽(?型)、姊姊(A型)、小丸子(B型)。請依遺傳學知識回答第03至04題：',
+            text: '如果小丸子的爸爸、媽媽再生一個孩子，他的血型與小丸子（B型）相同的機率是多少？',
+            options: [
+                '(A) 100%',
+                '(B) 50%',
+                '(C) 25%',
+                '(D) 0%'
+            ],
+            answer: 1, // B
+            explanation: '【易錯觀念說明】爸爸為 O 型 (ii)，小丸子為 B 型 (I^B i)，故媽媽必定提供 I^B 等位基因且帶有 A 型基因以生出 A 型姊姊，媽媽基因型為 I^A I^B。爸爸 (ii) × 媽媽 (I^A I^B)，子代血型為 A 型 (I^A i) 與 B 型 (I^B i) 各佔 50%。'
+        },
+        {
+            source: '114-2-2 卷 第 4 題',
+            groupTitle: '【題組】小丸子家中的血型族譜：爺爺(?型)、奶奶(A型)、姑姑(B型)、爸爸(O型)、媽媽(?型)、姊姊(A型)、小丸子(B型)。請依遺傳學知識回答第03至04題：',
+            text: '如果小丸子的姑姑想要能有生出各種血型（包含A、B、O以及AB型）小孩的機率，那麼小丸子的姑丈應該是什麼血型的基因型才有可能辦得到？',
+            options: [
+                '(A) I^A I^B',
+                '(B) I^A i',
+                '(C) ii',
+                '(D) 無論姑丈是什麼血型都無法辦得到。'
+            ],
+            answer: 1, // B
+            explanation: '【易錯觀念說明】姑姑血型為 B 型，因爸爸為 O 型(ii)，故姑姑必定為 I^B i。若要生出 4 種血型，姑丈必須帶有 I^A 與 i 基因（即 A 型 I^A i）。I^B i × I^A i 可產生 AB、A、B、O 四種血型。'
+        },
+        {
+            source: '114-2-2 卷 第 8 題',
+            groupTitle: null,
+            text: '下列狀況，有哪些是屬於誘發性突變的物理因素？ (甲)長期食用含戴奧辛的雞蛋；(乙)受到核子爆炸後的輻射線汙染；(丙)長期待在有紫外燈照射的房間；(丁)長期食用含亞硝酸鹽類的醃肉；(戊)長期待在有強烈電磁波的環境。',
+            options: [
+                '(A) 甲乙丙',
+                '(B) 乙丙丁',
+                '(C) 乙丁戊',
+                '(D) 乙丙戊。'
+            ],
+            answer: 3, // D
+            explanation: '【易錯觀念說明】物理因素包含：X光、紫外線、輻射線、強烈電磁波等；化學因素包含：戴奧辛、亞硝酸鹽、防腐劑、二手菸等。故答案為乙、丙、戊。'
+        },
+        {
+            source: '114-2-2 卷 第 9 題',
+            groupTitle: null,
+            text: '有關突變的敘述，下列何者正確？',
+            options: [
+                '(A) 突變的基因都會傳給後代',
+                '(B) 會引起生物立即性的死亡',
+                '(C) 有時可以用來改良生物品種',
+                '(D) 近親結婚易導致突變的發生。'
+            ],
+            answer: 2, // C
+            explanation: '【易錯觀念說明】(A) 只有發生在生殖細胞的突變才可能傳給後代；(B) 多數突變為中性或隱性，不一定導致死亡；(C) 人工誘發突變可用於育種；(D) 近親結婚是提高「隱性遺傳疾病的純合致病機率」，而非提高突變率。'
+        },
+        {
+            source: '114-2-2 卷 第 10 題',
+            groupTitle: null,
+            text: '有關遺傳疾病的敘述，下列何者正確？',
+            options: [
+                '(A) 白化症是須具有兩個隱性致病等位基因才會罹患此疾病',
+                '(B) 一對沒有遺傳疾病的夫婦，不可能生下患有遺傳疾病的孩子',
+                '(C) 唐氏症患者是第21對染色體上的等位基因發生隱性突變所導致',
+                '(D) 愛滋病可由母親在懷孕時將病原體直接傳給胎兒，所以愛滋病是遺傳性疾病。'
+            ],
+            answer: 0, // A
+            explanation: '【易錯觀念說明】(B) 雙親若為隱性帶原者 (Aa)，仍有 25% 機率生下患病孩子；(C) 唐氏症是「第21對染色體多了一條（數目異常）」，非單基因突變；(D) 愛滋病為病毒傳染病（母嬰垂直感染），非基因異常引起的遺傳病。'
+        },
+        {
+            source: '114-2-2 卷 第 11 題',
+            groupTitle: null,
+            text: '白化症是一種隱性的遺傳疾病。若a代表白化症的等位基因，A代表正常膚色的等位基因。阿斯的爸媽、外婆膚色皆正常，外公是白化症患者。下列敘述，何者正確？',
+            options: [
+                '(A) 阿斯的外公可能將白化症傳給阿斯的爸爸',
+                '(B) 男性得到白化症的機率比女性高',
+                '(C) 阿斯的媽媽基因型應該為Aa',
+                '(D) 阿斯不可能患有白化症。'
+            ],
+            answer: 2, // C
+            explanation: '【易錯觀念說明】外公為白化症 (aa)，必定提供一個 a 基因給女兒（阿斯的媽媽），故媽媽膚色正常但基因型必為 Aa。白化症為體染色體隱性遺傳，男女罹患機率相同。'
+        },
+        {
+            source: '114-2-2 卷 第 12 題',
+            groupTitle: null,
+            text: '下列何者不是遺傳諮詢中心可為民眾解答或協助的事項？',
+            options: [
+                '(A) 弄清唐氏症的起因',
+                '(B) 流行性感冒的預防',
+                '(C) 白化症患者生活的注意事項',
+                '(D) 有家族遺傳病史的民眾欲生孩子。'
+            ],
+            answer: 1, // B
+            explanation: '【易錯觀念說明】流行性感冒是由流感病毒引起的急性呼吸道傳染病，不屬於遺傳性疾病諮詢的範疇。'
+        },
+        {
+            source: '114-2-2 卷 第 13 題',
+            groupTitle: null,
+            text: '下列哪一項產物不是基因轉殖的運用？',
+            options: [
+                '(A) 目前人類胰島素的製造',
+                '(B) 基因改造過的玉米',
+                '(C) 螢光觀賞魚的研發',
+                '(D) 複製動物的研發。'
+            ],
+            answer: 3, // D
+            explanation: '【易錯觀念說明】複製動物（如複製羊桃莉）是利用「體細胞核移植」技術，將親代的細胞核植入去核卵細胞中，過程並未插入或改變外源基因，不屬於基因轉殖。'
+        },
+        {
+            source: '114-2-2 卷 第 14 題',
+            groupTitle: null,
+            text: '有關生物技術造成的影響，下列敘述何者不是事實？',
+            options: [
+                '(A) 經過基因改造的生物，若散布到自然界，有可能因為競爭力與適應力都比野生種強，嚴重排擠野生種的生存',
+                '(B) 生物技術可以解決人類生存的所有問題，應極力發展',
+                '(C) 基因改造生物和野生種雜交會改變野生種的基因，造成野生種逐步消失',
+                '(D) 生物複製技術尚未完美，可能發生缺陷和早夭的問題。'
+            ],
+            answer: 1, // B
+            explanation: '【易錯觀念說明】生物技術雖能解決部分糧食與醫療問題，但也伴隨著生態風險與倫理道德爭議，絕非能解決人類「所有」問題。'
+        },
+        {
+            source: '114-2-2 卷 第 15 題',
+            groupTitle: null,
+            text: '育種是以人為的方法栽培、飼養或改良動植物品種的過程。下列哪些方法能讓人們有機會篩選出新品種？ (甲)個體的自然突變；(乙)人為處理的誘發突變；(丙)基因轉殖技術。',
+            options: [
+                '(A) 甲乙丙',
+                '(B) 乙丙',
+                '(C) 甲乙',
+                '(D) 甲丙。'
+            ],
+            answer: 0, // A
+            explanation: '【易錯觀念說明】自然突變、人工誘發突變以及現代的基因轉殖技術，都能產生新的遺傳變異，提供育種過程進行篩選的材料。'
+        },
+        {
+            source: '114-2-2 卷 第 22 題',
+            groupTitle: null,
+            text: '有關化石的敘述，下列何者正確？',
+            options: [
+                '(A) 古代動物的肌肉組織比較容易形成化石',
+                '(B) 因壽命很長，故稱為活化石',
+                '(C) 所有生物死掉後都會形成化石',
+                '(D) 恐龍的足跡也可能形成化石。'
+            ],
+            answer: 3, // D
+            explanation: '【易錯觀念說明】(A) 堅硬部位（骨骼、牙齒）較易形成化石，軟組織極易腐爛；(C) 絕大多數生物死後都會腐爛，形成化石條件極嚴格；(D) 生物的活動痕跡（足跡、糞便、巢穴）稱為生痕化石。'
+        },
+        {
+            source: '114-2-2 卷 第 23 題',
+            groupTitle: null,
+            text: '有關化石的敘述，下列何者錯誤？',
+            options: [
+                '(A) 可直接從化石獲得古生物皮膚與毛髮顏色等資訊',
+                '(B) 古生物足跡和琥珀中的生物遺骸也可能形成化石',
+                '(C) 無法由單一化石就能推測生物的演化過程',
+                '(D) 各式的化石是說明生物演化最直接的證據。'
+            ],
+            answer: 0, // A
+            explanation: '【易錯觀念說明】皮膚與毛髮顏色等色素成分極難在高壓石化過程中保存下來，無法直接從一般石化化石中獲取。'
+        },
+        {
+            source: '114-2-2 卷 第 24 題',
+            groupTitle: null,
+            text: '(甲)古代生物遺留在地層中的骨骼；(乙)古代細菌遺留在岩石內的細胞壁痕跡；(丙)留在岩石上的古代生物痕跡；(丁)古代生物遺留在地層中的排遺痕跡。上述選項，有哪些可以被視作化石？',
+            options: [
+                '(A) 僅甲',
+                '(B) 僅甲乙',
+                '(C) 僅甲乙丙',
+                '(D) 甲乙丙丁。'
+            ],
+            answer: 3, // D
+            explanation: '【易錯觀念說明】廣義的化石包含古生物的遺體（骨骼、細胞壁痕跡）、遺跡（印痕、足跡）以及排遺（糞便）等。'
+        },
+        {
+            source: '114-2-2 卷 第 26 題',
+            groupTitle: null,
+            text: '生物於下列何種狀況下，會被稱為活化石？',
+            options: [
+                '(A) 該生物的壽命相當長',
+                '(B) 被包覆在琥珀中的化石',
+                '(C) 形態、構造與其祖先極為相似',
+                '(D) 抽取DNA而成功復育的物種。'
+            ],
+            answer: 2, // C
+            explanation: '【易錯觀念說明】「活化石」是指現存的生物中，其外觀形態、解剖構造經過數億年後，仍與地層中遠古祖先化石幾乎沒有太大改變的物種（如腔棘魚、銀杏、鱟）。'
+        },
+        {
+            source: '114-2-2 卷 第 30 題',
+            groupTitle: null,
+            text: '(甲)同一種生物可能有不同的俗名；(乙)不同生物可能有同一俗名；(丙)章魚、魷魚及衣魚，會使人誤以為牠們屬於魚類；(丁)杜鵑可能是鳥，也可能是花。從事學術研究時，有關使用俗名可能造成的影響，正確的敘述有哪些？',
+            options: [
+                '(A) 甲乙丙丁',
+                '(B) 甲乙',
+                '(C) 丙丁',
+                '(D) 甲丙丁。'
+            ],
+            answer: 0, // A
+            explanation: '【易錯觀念說明】俗名具有地域性與模糊性，常造成地區間溝通障礙與分類誤解，因此林奈才提出國際統一的「雙名法」學名。'
+        },
+        {
+            source: '114-2-2 卷 第 31 題',
+            groupTitle: null,
+            text: '關於臺灣獼猴的學名，下列何者正確？',
+            options: [
+                '(A) Macaca Cyclopis',
+                '(B) Macaca cyclopis',
+                '(C) macaca Cyclopis',
+                '(D) macaca cyclopis'
+            ],
+            answer: 1, // B
+            explanation: '【易錯觀念說明】學名由「屬名 + 種小名」組成，必須為斜體字（或加底線）。屬名第 1 個字母必須「大寫」，種小名則「全部小寫」。'
+        },
+        {
+            source: '114-2-2 卷 第 32 題',
+            groupTitle: null,
+            text: '有兩種生物，其學名分別為 Cervus unicolor 和 Cervus nippon，請問這兩種生物的分類關係為何？',
+            options: [
+                '(A) 同屬、不同科、不同目、不同綱',
+                '(B) 同屬、同科、不同目、不同綱',
+                '(C) 同屬、同科、同目、同綱',
+                '(D) 同種、同屬、同科、同目。'
+            ],
+            answer: 2, // C
+            explanation: '【易錯觀念說明】兩者第一個字（屬名）皆為 Cervus，說明屬於「同屬」。在階元分類中，凡是「同屬」的生物，階層高於屬的「科、目、綱、門、界」必定全部相同。'
+        },
+        {
+            source: '114-2-2 卷 第 33 題',
+            groupTitle: null,
+            text: '博美犬和吉娃娃犬交配後，能產生具有生殖能力的後代，有關此兩者的敘述，下列何者正確？',
+            options: [
+                '(A) 牠們的遺傳因子組合完全相同',
+                '(B) 牠們的種小名不同',
+                '(C) 牠們的屬名不同',
+                '(D) 牠們是同種生物。'
+            ],
+            answer: 3, // D
+            explanation: '【易錯觀念說明】生物學上對「同種」的定義為：在自然狀況下能互相交配，並產生「具有生殖能力的後代」。所有狗均為同一物種。'
+        },
+        {
+            source: '114-2-2 卷 第 34 題',
+            groupTitle: null,
+            text: '波波看見桌上有四種生物，其學名分別為：(甲) Dryas octopetala；(乙) Arnica cordifolia；(丙) Dryas bipetala；(丁) Kandelia octopetala。請問：哪兩種生物的親緣關係最相近？',
+            options: [
+                '(A) 甲和丙',
+                '(B) 甲和丁',
+                '(C) 乙和丁',
+                '(D) 乙和丙。'
+            ],
+            answer: 0, // A
+            explanation: '【易錯觀念說明】親緣關係看「屬名」（第一個字）。甲與丙屬名皆為 Dryas，為同屬生物，親緣關係最近。丁雖然種小名相同，但種小名多為形容詞，不能代表親緣關係。'
+        },
+        {
+            source: '114-2-2 卷 第 35 題',
+            groupTitle: null,
+            text: '下列哪一個界不屬於真核生物？',
+            options: [
+                '(A) 動物界',
+                '(B) 植物界',
+                '(C) 真菌界',
+                '(D) 原核生物界。'
+            ],
+            answer: 3, // D
+            explanation: '【易錯觀念說明】原核生物界（如細菌、藍菌）的細胞內「沒有核膜包圍的細胞核」，不屬於真核生物。'
+        },
+        {
+            source: '114-2-2 卷 第 40 題',
+            groupTitle: null,
+            text: '有關紫菜的敘述，下列何者錯誤？',
+            options: [
+                '(A) 屬於植物界',
+                '(B) 具有細胞核',
+                '(C) 具有葉綠體',
+                '(D) 具有細胞壁。'
+            ],
+            answer: 0, // A
+            explanation: '【易錯觀念說明】紫菜（紅藻類）與海帶（褐藻類）皆屬於「原生生物界」的藻類，不屬於植物界。'
+        },
+        {
+            source: '114-2-2 卷 第 43 題',
+            groupTitle: null,
+            text: '優格中常含有活性乳酸桿菌，有關乳酸桿菌的敘述，下列何者正確？',
+            options: [
+                '(A) 是一種酵母菌',
+                '(B) 能進行光合作用',
+                '(C) 屬於多細胞生物',
+                '(D) 和藍菌屬同一界。'
+            ],
+            answer: 3, // D
+            explanation: '【易錯觀念說明】乳酸桿菌是單細胞細菌，屬於「原核生物界」；藍菌亦屬於「原核生物界」。酵母菌則屬於真菌界。'
+        },
+        {
+            source: '114-2-2 卷 第 44 題',
+            groupTitle: null,
+            text: '最早的抗生素（青黴素/盤尼西林）是利用什麼生物而提煉出來的？',
+            options: [
+                '(A) 酵母菌',
+                '(B) 黑黴菌',
+                '(C) 青黴菌',
+                '(D) 乳酸桿菌。'
+            ],
+            answer: 2, // C
+            explanation: '【易錯觀念說明】弗萊明博士從「青黴菌」（屬於真菌界）的分泌物中發現了人類歷史上第一個抗生素——青黴素。'
+        },
+        {
+            source: '114-2-2 卷 第 45 題',
+            groupTitle: null,
+            text: '有關真菌界生物的敘述，下列何者正確？',
+            options: [
+                '(A) 具有細胞壁',
+                '(B) 都具有菌絲',
+                '(C) 都是單細胞生物',
+                '(D) 都可以食用。'
+            ],
+            answer: 0, // A
+            explanation: '【易錯觀念說明】(A) 真菌界具有由幾丁質構成的細胞壁；(B) 酵母菌為單細胞，沒有菌絲；(C) 蕈類與黴菌為多細胞；(D) 許多真菌含有劇毒不可食用。'
+        },
+        {
+            source: '114-2-2 卷 第 47 題',
+            groupTitle: null,
+            text: '常見的海帶和海苔（紫菜），在生物分類的共同特徵是什麼？',
+            options: [
+                '(A) 都是具有菌絲的真菌界',
+                '(B) 都是多細胞的原核生物界',
+                '(C) 都是單細胞的原生生物界',
+                '(D) 都是原生生物界且具葉綠體。'
+            ],
+            answer: 3, // D
+            explanation: '【易錯觀念說明】海帶與紫菜均屬於「原生生物界」的大型多細胞藻類，細胞內均含有葉綠體，能行光合作用自營。'
+        },
+        {
+            source: '114-2-2 卷 第 49 題',
+            groupTitle: null,
+            text: '麵包具淡淡的酒香，內部還有許多孔洞。下列何者不是在製作麵包過程中會發生的事？',
+            options: [
+                '(A) 是應用黴菌製作的',
+                '(B) 會進行發酵作用',
+                '(C) 會產生二氧化碳',
+                '(D) 會產生酒精。'
+            ],
+            answer: 0, // A
+            explanation: '【易錯觀念說明】發酵麵包主要使用的是「酵母菌」（單細胞真菌），而非黴菌。酵母菌無氧發酵產生二氧化碳（使麵包膨脹產生孔洞）與酒精（香氣）。'
+        },
+        {
+            source: '114-2-2 卷 第 50 題',
+            groupTitle: null,
+            text: '香菇有飽滿的傘狀外形，具有濃郁的香氣與Q彈口感，是廚房常見的食材。下列何者是它的特徵？',
+            options: [
+                '(A) 是屬於植物界的生物',
+                '(B) 有些種類能行光合作用',
+                '(C) 有細胞壁，也有細胞核',
+                '(D) 能進行出芽生殖來繁衍。'
+            ],
+            answer: 2, // C
+            explanation: '【易錯觀念說明】香菇屬於真菌界，細胞具細胞壁與細胞核，無葉綠體（無法行光合作用），為異營生物。主要透過「孢子」進行繁殖，出芽生殖通常為酵母菌之特徵。'
+        }
+    ],
+    '114-2-3': [
+        {
+            source: '114-2-3 卷 第 3 題',
+            groupTitle: null,
+            text: '「章魚、海馬、鱷魚、山椒魚、彈塗魚、魟魚、鯨魚、小丑魚」，以上屬於魚類的有幾種？',
+            options: [
+                '(A) 2種',
+                '(B) 3種',
+                '(C) 4種',
+                '(D) 5種'
+            ],
+            answer: 2, // C
+            explanation: '【易錯觀念說明】真正屬於魚類的只有 4 種：海馬、彈塗魚、魟魚、小丑魚。章魚（軟體動物）、鱷魚（爬蟲類）、山椒魚（兩棲類）、鯨魚（哺乳類）均不屬於魚類。'
+        },
+        {
+            source: '114-2-3 卷 第 4 題',
+            groupTitle: null,
+            text: '彩瑛和家人到雪霸國家公園踏青，她在路上看到的所有生物可以合稱為何？',
+            options: [
+                '(A) 族群',
+                '(B) 群集',
+                '(C) 生態系',
+                '(D) 棲地。'
+            ],
+            answer: 1, // B
+            explanation: '【易錯觀念說明】特定區域內「同一物種」個體總和為「族群」；特定區域內「所有不同物種生物」的集合稱為「群集」（生物群落）。包含非生物環境則稱為「生態系」。'
+        },
+        {
+            source: '114-2-3 卷 第 6 題',
+            groupTitle: null,
+            text: '菟絲子缺乏葉綠素，纏繞在綠色植物上，這屬於何種互動關係？',
+            options: [
+                '(A) 互利共生',
+                '(B) 競爭',
+                '(C) 掠食',
+                '(D) 寄生'
+            ],
+            answer: 3, // D
+            explanation: '【易錯觀念說明】菟絲子無法自行行光合作用，吸盤伸入寄主植物的維管束吸取養分，對寄主造成傷害，屬於典型的「寄生」關係。'
+        },
+        {
+            source: '114-2-3 卷 第 8 題',
+            groupTitle: null,
+            text: '有關台灣藍鵲的敘述，何者正確？',
+            options: [
+                '(A) 體表具有防止水分散失的鱗片',
+                '(B) 骨骼中空且輕',
+                '(C) 胎兒需在育兒袋中吸食乳汁長大',
+                '(D) 體外受精'
+            ],
+            answer: 1, // B
+            explanation: '【易錯觀念說明】台灣藍鵲屬於鳥類，體表覆蓋羽毛，骨骼中空質輕適應飛行，行體內受精與卵生。育兒袋與吸食乳汁為有袋類哺乳動物特徵。'
+        },
+        {
+            source: '114-2-3 卷 第 9 題',
+            groupTitle: null,
+            text: '海龜與鯽魚之間的關係和下列何組生物相同？',
+            options: [
+                '(A) 吸蟲和蝸牛',
+                '(B) 旗魚和沙丁魚',
+                '(C) 海葵和小丑魚',
+                '(D) 大樹與烏巢蕨。'
+            ],
+            answer: 2, // C
+            explanation: '【易錯觀念說明】海龜與鯽魚無直接捕食或寄生競爭關係，或若指兩者生活於水域環境；然而在生物互動題型中，海葵與小丑魚為互利共生關係。'
+        },
+        {
+            source: '114-2-3 卷 第 11 題',
+            groupTitle: null,
+            text: '關於「拖網漁法」對海洋生態的影響，以下何者不正確？',
+            options: [
+                '(A) 會摧毀海洋底棲生物如珊瑚',
+                '(B) 誤捕的魚類會被丟回海裡等死',
+                '(C) 會產生大量碎屑汙染',
+                '(D) 可順道藉漁撈作業清除海洋垃圾。'
+            ],
+            answer: 3, // D
+            explanation: '【易錯觀念說明】拖網漁法是一種破壞力極強的無差別捕撈方式，會嚴重的破壞海底棲地，絕非用來清除海洋垃圾的環保作業。'
+        },
+        {
+            source: '114-2-3 卷 第 12 題',
+            groupTitle: null,
+            text: '人們從原生山茶的樹種中，挑選培育產量高、能抗旱的臺茶24號，以滿足人們的飲茶需求；這樣的育種行為和哪個面向的多樣性較有關？',
+            options: [
+                '(A) 遺傳多樣性',
+                '(B) 物種多樣性',
+                '(C) 食物多樣性',
+                '(D) 生態系多樣性'
+            ],
+            answer: 0, // A
+            explanation: '【易錯觀念說明】在「同一個物種」內部挑選具有不同個體特徵（如抗旱、高產量）進行育種，利用的是種內的基因差異，屬於「遺傳多樣性」（基因多樣性）。'
+        },
+        {
+            source: '114-2-3 卷 第 14 題',
+            groupTitle: null,
+            text: '在分類上，我們將章魚和蝸牛歸為一類（軟體動物門），那麼依此原則，蜻蜓可和下列哪一種動物歸為同一類（節肢動物門）？',
+            options: [
+                '(A) 槍蝦',
+                '(B) 蝌蚪',
+                '(C) 牡蠣',
+                '(D) 渦蟲。'
+            ],
+            answer: 0, // A
+            explanation: '【易錯觀念說明】蜻蜓屬於節肢動物門昆蟲綱；槍蝦（甲殼綱）同樣具有分節的附肢與外骨骼，同屬「節肢動物門」。牡蠣為軟體動物，蝌蚪為脊索動物，渦蟲為扁形動物。'
+        },
+        {
+            source: '114-2-3 卷 第 15 題',
+            groupTitle: null,
+            text: '涼拌海蜇皮，口感脆脆的很好吃，燦榮特地上網查了海蜇皮的資訊，原來海蜇皮是一種可食用水母，有關水母的敘述，何者有誤？',
+            options: [
+                '(A) 水生動物',
+                '(B) 具有觸手',
+                '(C) 身體對外補充只有一個開口',
+                '(D) 與海星同屬於刺絲胞動物門。'
+            ],
+            answer: 3, // D
+            explanation: '【易錯觀念說明】水母屬於「刺絲胞動物門」；海星具有管足與棘皮，屬於「棘皮動物門」，兩者不同門。'
+        },
+        {
+            source: '114-2-3 卷 第 16 題',
+            groupTitle: null,
+            text: '難得休假的泰容到木柵動物園參觀，先到兩棲爬蟲館，下列是他在館中看到的生物介紹，哪一項不合理？',
+            options: [
+                '(A) 鱷魚具有鱗片可以防止水分散失',
+                '(B) 蜥蜴是體內受精',
+                '(C) 烏龜在水中用鰓呼吸',
+                '(D) 蛇是外溫動物。'
+            ],
+            answer: 2, // C
+            explanation: '【易錯觀念說明】烏龜屬於爬蟲類，終生均使用「肺」進行呼吸，即使是水棲烏龜也必須浮出水面換氣，絕非用鰓呼吸。'
+        },
+        {
+            source: '114-2-3 卷 第 17 題',
+            groupTitle: null,
+            text: '下列關於裸子植物的敘述何者正確？',
+            options: [
+                '(A) 蘇鐵會開花',
+                '(B) 松子是松樹的果實',
+                '(C) 雲杉的雌毬果內有胚珠，成熟後會隨風落在花粉粒上，受精發育成種子',
+                '(D) 柏樹的毬果有雌雄之分，雌毬果較大。'
+            ],
+            answer: 3, // D
+            explanation: '【易錯觀念說明】(A) 裸子植物不開花（開花是被子植物專利）；(B) 裸子植物無子房，故「無果實」，松子是種子；(C) 是花粉粒隨風落在雌毬果的胚珠上。'
+        },
+        {
+            source: '114-2-3 卷 第 21 題',
+            groupTitle: null,
+            text: '大甲溪口是許多重要候鳥的棲息地，因此政府在此處成立高美溼地保護區，此做法合乎下列何種公約的精神？',
+            options: [
+                '(A) 拉姆薩公約',
+                '(B) 蒙特婁公約',
+                '(C) 華盛頓公約',
+                '(D) 京都議定書。'
+            ],
+            answer: 0, // A
+            explanation: '【易錯觀念說明】《拉姆薩公約》旨在保護全球重要的「濕地」生態系；《蒙特婁議定書》保護臭氧層；《華盛頓公約》管制瀕危物種國際貿易。'
+        },
+        {
+            source: '114-2-3 卷 第 22 題',
+            groupTitle: null,
+            text: '下列關於生物防治的敘述何者錯誤？',
+            options: [
+                '(A) 生物防治是利用生物之間的交互關係來達到防治病蟲害的目的',
+                '(B) 「鴨稻農法」亦是一種生物防治的方法',
+                '(C) 可減少化學農藥的使用，對生態環境較友善',
+                '(D) 效果一定比使用農藥好，而且能立即見效。'
+            ],
+            answer: 3, // D
+            explanation: '【易錯觀念說明】生物防治（如引入天敵）作用時間通常較長，需要時間建立生態平衡，效果不一定比化學農藥「立即見效」，且須提防天敵演變為外來入侵種。'
+        },
+        {
+            source: '114-2-3 卷 第 24 題',
+            groupTitle: null,
+            text: '下列為國際間為了維護地球環境與生物所簽定的公約與其內容的相關敘述，何者有誤？',
+            options: [
+                '(A) 聯合國氣候變化綱要公約-穩定維持大氣中溫室氣體的濃度',
+                '(B) 拉姆薩公約-鼓勵開發濕地',
+                '(C) 華盛頓公約-管制瀕危野生動植物國際貿易',
+                '(D) 蒙特婁議定書-減少氟氯碳化合物的使用。'
+            ],
+            answer: 1, // B
+            explanation: '【易錯觀念說明】《拉姆薩公約》的核心精神是「保護與明智利用濕地」，防止濕地遭到過度開發與破壞，非鼓勵開發。'
+        },
+        {
+            source: '114-2-3 卷 第 28 題',
+            groupTitle: null,
+            text: '有關蕨類植物的描述，何者正確？',
+            options: [
+                '(A) 具有毬果',
+                '(B) 沒有維管束',
+                '(C) 有花粉管以利受精作用',
+                '(D) 孢子囊堆的排列方式是蕨類的重要分類依據之一。'
+            ],
+            answer: 3, // D
+            explanation: '【易錯觀念說明】蕨類具有維管束（輸導組織），不具花粉管也不結種子（精子靠水游泳受精）；毬果為裸子植物特徵。成熟葉背的孢子囊堆形狀與排列方式為分類的重要依據。'
+        },
+        {
+            source: '114-2-3 卷 第 40 題',
+            groupTitle: '【題組】遊戲設計家觀察螞蟻搬運物品的日常，設計出皮克敏這款遊戲。請回答第40至42題：',
+            text: '員娛觀察到皮克敏的頭頂上都長著一片綠色的葉子。如果皮克敏真的是由某種植物演化而來，有真正的根、莖、葉構造，且可以透過行光合作用來補充能量，那麼牠們最不可能屬於植物界中的哪一個族群？',
+            options: [
+                '(A) 蘚苔植物',
+                '(B) 蕨類植物',
+                '(C) 裸子植物',
+                '(D) 被子植物。'
+            ],
+            answer: 0, // A
+            explanation: '【易錯觀念說明】蘚苔植物缺乏真正的維管束，因此「不具有真正的根、莖、葉」構造（僅有假根與類似莖葉的構造）。'
+        },
+        {
+            source: '114-2-3 卷 第 41 題',
+            groupTitle: '【題組】遊戲設計家觀察螞蟻搬運物品的日常，設計出皮克敏這款遊戲。請回答第40至42題：',
+            text: '「紅色皮克敏」有著尖銳的鼻子，白色的花苞和花，全身呈紅色。員娛仔細觀察牠們頭頂的葉片，發現葉脈呈現網狀脈，且開出來的花有五片花瓣。紅色皮克敏的植物特徵與哪一種植物最為相似？',
+            options: [
+                '(A) 百合',
+                '(B) 臺灣蘇鐵',
+                '(C) 山蘇',
+                '(D) 日日春。'
+            ],
+            answer: 3, // D
+            explanation: '【易錯觀念說明】「網狀脈」與「花瓣數為 4 或 5 的倍數」為雙子葉被子植物的特徵。選項中的日日春為雙子葉植物；百合為單子葉植物（平行脈、花瓣3的倍數）；山蘇為蕨類；蘇鐵為裸子植物。'
+        },
+        {
+            source: '114-2-3 卷 第 42 題',
+            groupTitle: '【題組】遊戲設計家觀察螞蟻搬運物品的日常，設計出皮克敏這款遊戲。請回答第40至42題：',
+            text: '最新發表的《皮克敏X》中，將遊戲結合生物知識，設計出特殊款「松果皮克敏」。這種皮克敏頭頂長著針狀的葉子，且在繁殖季節時，牠們的頭部會發育出特殊的「毬果」構造。根據上述的特性，這種「松果皮克敏」在植物界的分類特徵，與下列哪一種原生植物最為接近？',
+            options: [
+                '(A) 筆筒樹',
+                '(B) 仙人掌',
+                '(C) 紅檜',
+                '(D) 向日葵。'
+            ],
+            answer: 2, // C
+            explanation: '【易錯觀念說明】具有針狀葉與「毬果」構造是「裸子植物」的典型特徵。紅檜屬於裸子植物；筆筒樹為蕨類；仙人掌與向日葵為被子植物。'
+        },
+        {
+            source: '114-2-3 卷 第 45 題',
+            groupTitle: '【題組】鯨落生態系：死亡的鯨魚沉入深海，骨頭中的脂類被細菌分解，支撐貽貝、管蟲等生物生長。回答第45至47題：',
+            text: '這些生物與細菌共同構成了？',
+            options: [
+                '(A) 個體',
+                '(B) 族群',
+                '(C) 群集',
+                '(D) 生態系。'
+            ],
+            answer: 2, // C
+            explanation: '【易錯觀念說明】特定區域內「所有不同種生物（盲鰻、貽貝、管蟲、細菌等）」的集合，不包含非生物環境，稱為「群集」。'
+        },
+        {
+            source: '114-2-3 卷 第 46 題',
+            groupTitle: '【題組】鯨落生態系：死亡的鯨魚沉入深海，骨頭中的脂類被細菌分解，支撐貽貝、管蟲等生物生長。回答第45至47題：',
+            text: '在鯨落生態系中，螃蟹、盲鰻等消費者攝食鯨魚組織後，碳元素會以何種形式回到環境中？',
+            options: [
+                '(A) 蒸散作用',
+                '(B) 排泄作用',
+                '(C) 呼吸作用',
+                '(D) 光合作用。'
+            ],
+            answer: 2, // C
+            explanation: '【易錯觀念說明】生物透過「呼吸作用」分解有機物，將其中的碳元素轉化為二氧化碳 (CO2) 釋放回自然環境中。'
+        },
+        {
+            source: '114-2-3 卷 第 49 題',
+            groupTitle: '【題組】紐西蘭陽光危機：紐西蘭皮膚癌發生率高，主因是鄰近南極臭氧層破洞與極低空氣污染，陽光未經過濾。回答第49至50題：',
+            text: '根據文章內容，當地居民在「涼爽或陰天」也極易曬傷的主要原因，與下列哪一個概念最相關？',
+            options: [
+                '(A) 因為全球暖化日益嚴重，導致紫外線長驅直入',
+                '(B) 空氣污染低，少有灰塵，因而無法有效阻擋陽光中的紫外線',
+                '(C) 雲層中的水氣會聚集熱源，導致曬傷',
+                '(D) 因為臭氧層有破洞，無法正常吸收紫外線。'
+            ],
+            answer: 3, // D
+            explanation: '【易錯觀念說明】平流層中的臭氧層主要功能是吸收太陽光中的過量「紫外線」。臭氧層破洞會使紫外線直接穿透大氣照射到地表，導致皮膚曬傷與癌變風險劇增。'
+        },
+        {
+            source: '114-2-3 卷 第 50 題',
+            groupTitle: '【題組】紐西蘭陽光危機：紐西蘭皮膚癌發生率高，主因是鄰近南極臭氧層破洞與極低空氣污染，陽光未經過濾。回答第49至50題：',
+            text: '為了緩解紐西蘭這類因大氣變化而面臨的皮膚癌威脅，國際社會曾共同簽署多項環保公約。請問下列哪一項國際公約的管制對象，其主要目的就是為了解決上述文章中所提到的「大氣層破洞」危機？',
+            options: [
+                '(A) 《蒙特婁議定書》：管制氟氯碳化物等物質，以保護破裂的臭氧層',
+                '(B) 《京都議定書》：管制二氧化碳等溫室氣體，以抑制日益嚴重的紫外線',
+                '(C) 《聯合國氣候變化綱要公約》：全面削減溫室氣體的排放，防止全球氣溫持續上升',
+                '(D) 《華盛頓公約》：限制空氣污染物的排放，藉此提高大氣對陽光的過濾能力。'
+            ],
+            answer: 0, // A
+            explanation: '【易錯觀念說明】《蒙特婁議定書》的主要目標是禁用會破壞臭氧層的「氟氯碳化物 (CFCs)」；《京都議定書》與《巴黎協定》則是為了減緩溫室效應與全球暖化。'
+        }
+    ]
+};
+
+let currentExamKey = '';
+
+// 顯示選擇畫面
+function showSelectScreen() {
+    document.getElementById('examSelectScreen').style.display = 'flex';
+    document.getElementById('quizScreen').style.display = 'none';
+}
+
+// 開始刷題
+function startQuiz(examKey) {
+    currentExamKey = examKey;
+    const questions = examData[examKey];
+    
+    document.getElementById('examSelectScreen').style.display = 'none';
+    document.getElementById('quizScreen').style.display = 'block';
+    
+    document.getElementById('progressIndicator').innerText = `題目總數：${questions.length} 題`;
+    
+    const container = document.getElementById('questionsContainer');
+    container.innerHTML = '';
+
+    questions.forEach((q, index) => {
+        const card = document.createElement('div');
+        card.className = 'question-card';
+        card.id = `q-card-${index}`;
+
+        let groupHtml = q.groupTitle ? `<div class="group-title">📋 <b>題組背景：</b>${q.groupTitle}</div>` : '';
+
+        let optionsHtml = '';
+        q.options.forEach((opt, optIndex) => {
+            optionsHtml += `
+                <li class="option-item">
+                    <button class="option-btn" id="btn-${index}-${optIndex}" onclick="checkAnswer(${index}, ${optIndex})">
+                        ${opt}
+                    </button>
+                </li>
+            `;
+        });
+
+        card.innerHTML = `
+            <div class="source-tag">[${q.source}]</div>
+            ${groupHtml}
+            <div class="question-text">${index + 1}. ${q.text}</div>
+            <ul class="options-list">
+                ${optionsHtml}
+            </ul>
+            <div class="explanation-box" id="explain-${index}">
+                <div class="result-header" id="result-header-${index}"></div>
+                <div><b>正確答案：</b>${q.options[q.answer]}</div>
+                <div class="misconcept-note"><b>解析與易錯觀念：</b><br>${q.explanation}</div>
+                <div style="margin-top: 6px; font-size: 0.8rem; color: #888;">對照標籤：[${q.source}]</div>
+            </div>
+        `;
+
+        container.appendChild(card);
+    });
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// 點擊選項核對答案
+function checkAnswer(qIndex, selectedOptIndex) {
+    const q = examData[currentExamKey][qIndex];
+    const isCorrect = (selectedOptIndex === q.answer);
+
+    // 禁用該題所有選項按鈕，防止重複點擊
+    q.options.forEach((_, optIndex) => {
+        const btn = document.getElementById(`btn-${qIndex}-${optIndex}`);
+        btn.disabled = true;
+
+        if (optIndex === q.answer) {
+            btn.classList.add('show-correct');
+        }
+    });
+
+    const selectedBtn = document.getElementById(`btn-${qIndex}-${selectedOptIndex}`);
+    if (isCorrect) {
+        selectedBtn.classList.add('selected-correct');
+    } else {
+        selectedBtn.classList.add('selected-wrong');
+    }
+
+    // 顯示答案與詳細解析
+    const explainBox = document.getElementById(`explain-${qIndex}`);
+    const resultHeader = document.getElementById(`result-header-${qIndex}`);
+
+    if (isCorrect) {
+        resultHeader.className = 'result-header correct';
+        resultHeader.innerText = '⭕ 回答正確！';
+    } else {
+        resultHeader.className = 'result-header wrong';
+        resultHeader.innerText = '❌ 回答錯誤！';
+    }
+
+    explainBox.classList.add('visible');
+}
+</script>
+
+</body>
+</html>
